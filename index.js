@@ -1869,7 +1869,7 @@ app.get("/", async function (req, res) {
       ".tooltip{position:relative;display:inline-block;border-bottom: 1px dotted gray;}.tooltip .tooltiptext{font-size:.8em;visibility:hidden;width:360px;background-color:gray;color:white;text-align:left;padding:5px;border-radius:6px;position:absolute;z-index:1;top:100%;left:75%;margin-left:-30px;}.tooltip:hover .tooltiptext{visibility:visible;}";
     let style = `
     .popover {
-      display: none;
+       top:0;
       position: absolute;
       background-color: #212121;
       border: 1px solid #ddd;
@@ -1984,39 +1984,29 @@ app.get("/", async function (req, res) {
       // Adds touch capability to hover tooltips
       document.addEventListener("touchstart", function() {}, true);
 
-      // Popover functions
-      document.addEventListener('DOMContentLoaded', () => {
-        const button = document.getElementById('popoverButton');
+
+      function togglePopover() {
+        console.log('toggling')
         const popoverContent = document.getElementById('popoverContent');
-        console.log('loadeded' )
-      
-        console.log('baaa', button)
-        console.log('popoverContent', popoverContent)
-        button.addEventListener('click', () => {
-          console.log('eegheyeyeeye' )
-          popoverContent.classList.toggle('hidden');
-        });
-      });
+        if (popoverContent.style.display === 'block') {
+          popoverContent.style.display = 'none';
+        } else {
+          popoverContent.style.display = 'block';
+        }
+      }
+
     </script>
     `;
     body += `${jsScript}<link href='https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css' rel='stylesheet'></head>`;
     // TODO: END script
 
     body +=
-      "<body style='width:100%; overflow-x:hidden'><div class='container flex justify-center mx-auto' style='  gap:8px; flex-direction:column'><h1 style='font-size:18px;'>MLB Games</h1>" +
-      "\n";
-
-    // style="display:flex; gap:8px; flex-direction:column"
-    body +=
-      `<div id="popoverContent" class="popover border border-gray-200 p-4 shadow-md">` +
-      '<p><span class="tinytext">Updated' +
-      session.getCacheUpdatedDate(cache_name) +
-      "</span></p>" +
+      "<body style='width:100%;'><div class='container flex justify-center mx-auto' style='overflow-y: hidden;overflow-x:hidden;gap:8px; flex-direction:column'>" +
       "\n";
 
     todayUTCHours -= 4;
     body +=
-      '<p><span class="tooltip">Date<span class="tooltiptext">"today" lasts until ' +
+      ` <div class="flex"><h1 style='font-size:18px;'>MLB Games</h1> <p><span class="tooltip">Date<span class="tooltiptext">"today" lasts until ` +
       todayUTCHours +
       " AM EST. Home page will default to yesterday between " +
       todayUTCHours +
@@ -2039,6 +2029,15 @@ app.get("/", async function (req, res) {
         VALID_DATES[i] +
         "</button> ";
     }
+    body += "</div>";
+
+    // style="display:flex; gap:8px; flex-direction:column"
+    body +=
+      `<div id="popoverContent" class="popover hidden border border-gray-200 p-4 shadow-md flex flex-col" style="gap:6px">` +
+      '<p><span class="tinytext">Updated' +
+      session.getCacheUpdatedDate(cache_name) +
+      "</span></p>" +
+      "\n";
 
     body +=
       '<p><span class="tooltip">Level<span class="tooltiptext">Major or minor league level</span></span>: ';
@@ -2170,14 +2169,14 @@ app.get("/", async function (req, res) {
     }
     body +=
       `</p>
-        <button id="popoverButton" class="bg-red-500 text-white font-semibold py-1 px-2 rounded">
+        <button id="popoverButton" onclick="togglePopover()"  class="bg-red-500 text-white font-semibold py-1 px-2 rounded">
           Close Filters
         </button>
       </div>` + "\n";
 
     body += `
-    <button id="popoverButton" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded" style="width:200px">
-      Open Filters
+    <button id="popoverButton" onclick="togglePopover()" class="bg-blue-500 text-white font-semibold py-2 px-4 rounded" style="width:200px">
+      Open Game Filters
     </button>`;
 
     // TODO: table start
@@ -3054,9 +3053,9 @@ app.get("/", async function (req, res) {
                           stationlink =
                             "<button class='w-full  text-white rounded'" +
                             ' style="height: 38px;color:#' +
-                            TEAM_COLORS?.[teamabbr][0] +
+                            TEAM_COLORS[teamabbr][0] +
                             ";background:#" +
-                            TEAM_COLORS?.[teamabbr][1] +
+                            TEAM_COLORS[teamabbr][1] +
                             ';"' +
                             " onclick=\"window.location.href='" +
                             thislink +
@@ -3713,7 +3712,7 @@ app.get("/", async function (req, res) {
 
     // Datepicker functions
     body +=
-      '<script>var datePicker=document.getElementById("gameDate");function changeDate(e){date=datePicker.value;reload()}function removeDate(e){datePicker.removeEventListener("change",changeDate,false);datePicker.addEventListener("blur",changeDate,false);if(e.keyCode===13){date=datePicker.value;reload()}}datePicker.addEventListener("change",changeDate,false);datePicker.addEventListener("keypress",removeDate,false)</script>' +
+      `<script>var datePicker=document.getElementById("gameDate");function changeDate(e){date=datePicker.value;reload()}function removeDate(e){datePicker.removeEventListener("change",changeDate,false);datePicker.addEventListener("blur",changeDate,false);if(e.keyCode===13){date=datePicker.value;reload()}}datePicker.addEventListener("change",changeDate,false);datePicker.addEventListener("keypress",removeDate,false)</script>` +
       "\n";
 
     // Highlights modal defintion
@@ -3722,7 +3721,8 @@ app.get("/", async function (req, res) {
 
     // Highlights modal functions
     body +=
-      '<script type="text/javascript">var modal = document.getElementById("myModal");var highlightsModal = document.getElementById("highlights");var span = document.getElementsByClassName("close")[0];function parsehighlightsresponse(responsetext) { try { var highlights = JSON.parse(responsetext);var modaltext = "<ul>"; if (highlights && highlights[0]) { for (var i = 0; i < highlights.length; i++) { modaltext += "<li><a href=\'' +
+      `<script type="text/javascript"> 
+      var modal = document.getElementById("myModal");var highlightsModal = document.getElementById("highlights");var span = document.getElementsByClassName("close")[0];function parsehighlightsresponse(responsetext) { try { var highlights = JSON.parse(responsetext);var modaltext = "<ul>"; if (highlights && highlights[0]) { for (var i = 0; i < highlights.length; i++) { modaltext += "<li><a href=\'` +
       link +
       '?highlight_src=" + encodeURIComponent(highlights[i].playbacks[3].url) + "&resolution=" + resolution + "' +
       content_protect_b +
